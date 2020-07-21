@@ -114,8 +114,6 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        addFormNumericBox(F("Display Timeout"), F("p200_timer"), PCONFIG(3));
-
         success = true;
         break;
       }
@@ -125,10 +123,9 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
         PCONFIG(0) = getFormItemInt(F("p200_rotat"));
         PCONFIG(1) = getFormItemInt(F("p200_datun"));
         PCONFIG(2) = getFormItemInt(F("p200_font"));
-        PCONFIG(3) = getFormItemInt(F("p200_timer"));
 
         // FIXME TD-er: This is a huge stack allocated object.
-        char deviceTemplate[P12_Nlines][P12_Nchars];
+        char deviceTemplate[P200_Nlines][P200_Nchars];
         String error;
         for (byte varNr = 0; varNr < P12_Nlines; varNr++)
         {
@@ -146,55 +143,19 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (PCONFIG(1) == 2) {
-          Plugin_012_rows = 4;
-          Plugin_012_cols = 20;
-        } else if (PCONFIG(1) == 1) {
-          Plugin_012_rows = 2;
-          Plugin_012_cols = 16;
+        tft.init();
+        tft.setRotation(PCONFIG(0));
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextSize(PCONFIG(2));
+        tft.setTextColor(TFT_GREEN);
+        tft.setCursor(0, 0);
+        tft.setTextDatum(PCONFIG(1));
+
+        if (TFT_BL > 0) {                           // TFT_BL has been set in the TFT_eSPI library in the User Setup file TTGO_T_Display.h
+        pinMode(TFT_BL, OUTPUT);                // Set backlight pin to output mode
+        digitalWrite(TFT_BL, TFT_BACKLIGHT_ON); // Turn backlight on. TFT_BACKLIGHT_ON has been set in the TFT_eSPI library in the User Setup file TTGO_T_Display.h
         }
-
-        Plugin_012_mode = PCONFIG(3);
-
-        //TODO:LiquidCrystal_I2C class doesn't have destructor. So if LCD type (size) is changed better reboot for changes to take effect.
-        // workaround is to fix the cols and rows at its maximum (20 and 4)
-        if (!lcd)
-          lcd = new LiquidCrystal_I2C(PCONFIG(0), 20, 4); //Plugin_012_cols, Plugin_012_rows);
-
-        // Setup LCD display
-        lcd->init();                      // initialize the lcd
-        lcd->backlight();
-        lcd->print(F("ESP Easy"));
-        displayTimer = PCONFIG(2);
-        if (CONFIG_PIN3 != -1)
-          pinMode(CONFIG_PIN3, INPUT_PULLUP);
         success = true;
-        break;
-      }
-
-    case PLUGIN_TEN_PER_SECOND:
-      {
-        if (CONFIG_PIN3 != -1)
-        {
-          if (!digitalRead(CONFIG_PIN3))
-          {
-            if (lcd) {
-              lcd->backlight();
-            }
-            displayTimer = PCONFIG(2);
-          }
-        }
-        break;
-      }
-
-    case PLUGIN_ONCE_A_SECOND:
-      {
-        if ( displayTimer > 0)
-        {
-          displayTimer--;
-          if (lcd && displayTimer == 0)
-            lcd->noBacklight();
-        }
         break;
       }
 
