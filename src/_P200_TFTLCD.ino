@@ -32,8 +32,8 @@ TFT_eSPI tft = TFT_eSPI(135, 240); // Invoke custom library
 #define TFT_RST             23
 #define TFT_BL              4   // Display backlight control pin
 
-#define P200_Nlines 4        // The number of different lines which can be displayed
-#define P200_Nchars 80
+#define P200_Nlines 2        // The number of different lines which can be displayed
+#define P200_Nchars 30
 
 boolean Plugin_200(byte function, struct EventStruct *event, String& string)
 {
