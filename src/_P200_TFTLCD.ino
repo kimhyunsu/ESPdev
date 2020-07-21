@@ -32,10 +32,10 @@ TFT_eSPI tft = TFT_eSPI(135, 240); // Invoke custom library
 #define TFT_RST             23
 #define TFT_BL              4   // Display backlight control pin
 
-#define P12_Nlines 4        // The number of different lines which can be displayed
-#define P12_Nchars 80
+#define P200_Nlines 4        // The number of different lines which can be displayed
+#define P200_Nchars 80
 
-boolean Plugin_012(byte function, struct EventStruct *event, String& string)
+boolean Plugin_200(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
   static byte displayTimer = 0;
@@ -103,28 +103,18 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         options2[5] = F("Font72rle");
         options2[6] = F("Font72x53rle");
         int optionValues2[7] = { 1, 2, 3, 4, 5, 6, 7 };
-        addFormSelector(F("Datum"), F("p200_datun"), 7, options2, optionValues2, choice3);
+        addFormSelector(F("Font"), F("p200_font"), 7, options2, optionValues2, choice3);
 
         {
-          String strings[P12_Nlines];
-          LoadCustomTaskSettings(event->TaskIndex, strings, P12_Nlines, P12_Nchars);
-          for (byte varNr = 0; varNr < P12_Nlines; varNr++)
+          String strings[P200_Nlines];
+          LoadCustomTaskSettings(event->TaskIndex, strings, P200_Nlines, P200_Nchars);
+          for (byte varNr = 0; varNr < P200_Nlines; varNr++)
           {
-            addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
+            addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P200_Nchars);
           }
         }
 
-        addRowLabel(F("Display button"));
-        addPinSelect(false, F("taskdevicepin3"), CONFIG_PIN3);
-
-        addFormNumericBox(F("Display Timeout"), F("p012_timer"), PCONFIG(2));
-
-        String options3[3];
-        options3[0] = F("Continue to next line (as in v1.4)");
-        options3[1] = F("Truncate exceeding message");
-        options3[2] = F("Clear then truncate exceeding message");
-        int optionValues3[3] = { 0,1,2 };
-        addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, PCONFIG(3));
+        addFormNumericBox(F("Display Timeout"), F("p200_timer"), PCONFIG(3));
 
         success = true;
         break;
@@ -132,10 +122,10 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        PCONFIG(0) = getFormItemInt(F("p012_adr"));
-        PCONFIG(1) = getFormItemInt(F("p012_size"));
-        PCONFIG(2) = getFormItemInt(F("p012_timer"));
-        PCONFIG(3) = getFormItemInt(F("p012_mode"));
+        PCONFIG(0) = getFormItemInt(F("p200_rotat"));
+        PCONFIG(1) = getFormItemInt(F("p200_datun"));
+        PCONFIG(2) = getFormItemInt(F("p200_font"));
+        PCONFIG(3) = getFormItemInt(F("p200_timer"));
 
         // FIXME TD-er: This is a huge stack allocated object.
         char deviceTemplate[P12_Nlines][P12_Nchars];
