@@ -150,8 +150,8 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
         tft.setTextColor(TFT_BLACK);
         //tft.setCursor(20, 30);
         tft.setTextDatum(PCONFIG(1));
-        tft.drawString("TEMP : 26 c",210,50);
-        tft.drawString("HUM  : 56 %",210,100);
+        tft.drawString("TEMP : 26 c",10,50);
+        tft.drawString("HUM  : 56 %",10,100);
 
         if (TFT_BL > 0) {                           // TFT_BL has been set in the TFT_eSPI library in the User Setup file TTGO_T_Display.h
         pinMode(TFT_BL, OUTPUT);                // Set backlight pin to output mode
@@ -167,12 +167,9 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[P200_Nlines][P200_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte x = 0; x < 2; x++)
-        {
-          String tmpString = deviceTemplate[x];
+          String tmpString = deviceTemplate[0];
+        //  tft.drawString(tmpString,210,50);
 
-
-        }
         success = false;
         break;
       }
