@@ -38,6 +38,7 @@ else:
     "USES_P087",  # Serial Proxy
     "USES_P097",  # Touch (ESP32)
     "USES_P200",  # Touch (ESP32)
+    "USES_P201",  # Touch (ESP32)
 
     "USE_SETTINGS_ARCHIVE",
     "FEATURE_ARDUINO_OTA"
