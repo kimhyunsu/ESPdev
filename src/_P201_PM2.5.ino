@@ -13,15 +13,106 @@
 #define PLUGIN_201
 #define PLUGIN_ID_201 201
 #define PLUGIN_NAME_201 "Dust - PM2.5"
-#define PLUGIN_VALUENAME1_201 "PM2.5"
+#define PLUGIN_VALUENAME1_201 "pm2.5"
 
-ESPeasySerial *P201_easySerial;
+#define PMSx003_SIG1 0XAA
+#define PMSx003_SIZE 7
+
+ESPeasySerial *P201_easySerial = nullptr;
 boolean Plugin_201_init = false;
+boolean values_received = false;
 
-int incomeByte[7];
-int data;
-int z = 0;
-int sum;
+// Read 2 bytes from serial and make an uint16 of it. Additionally calculate
+// checksum for PMSx003. Assumption is that there is data available, otherwise
+// this function is blocking.
+void SerialRead8(uint8_t* value, uint8_t* checksum)
+{
+  uint8_t data;
+
+  // If P201_easySerial is initialized, we are using soft serial
+  if (P201_easySerial == nullptr) return;
+  data = P201_easySerial->read();
+
+  *value = data;
+
+  if (checksum != nullptr)
+  {
+    *checksum += data;
+  }
+
+#if 0
+  // Low-level logging to see data from sensor
+  String log = F("PM2.5 : byte=0x");
+  log += String(data,HEX);
+  log += F(" result=0x");
+  log += String(*value,HEX);
+  addLog(LOG_LEVEL_INFO, log);
+#endif
+}
+
+void SerialFlush() {
+  if (P201_easySerial != nullptr) {
+    P201_easySerial->flush();
+  }
+}
+
+boolean PacketAvailable(void)
+{
+  if (P201_easySerial != nullptr) // Software serial
+  {
+    // When there is enough data in the buffer, search through the buffer to
+    // find header (buffer may be out of sync)
+    if (!P201_easySerial->available()) return false;
+    while ((P201_easySerial->peek() != PMSx003_SIG1) && P201_easySerial->available()) {
+      P201_easySerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
+    }
+    if (P201_easySerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
+  }
+  return true;
+}
+
+boolean Plugin_201_process_data(struct EventStruct *event) {
+  uint8_t checksum = 0;
+  uint8_t checksum2 = 0;
+  uint8_t packet_header = 0;
+
+  packet_header = P201_easySerial->read();
+  if (packet_header != PMSx003_SIG1) {
+    // Not the start of the packet, stop reading.
+    return false;
+  }
+
+  uint8_t data[4]; // byte data_low, data_high;
+  for (int i = 0; i < 4; i++)
+    SerialRead8(&data[i], &checksum);
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("Vout(H)=");
+    log += data[0];
+    log += F(", Vout(L)=");
+    log += data[1];
+    log += F(", Vref(H)=");
+    log += data[2];
+    log += F(", Vref(L)=");
+    log += data[3];
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  float vo = (data[0]*256.0 + data[1])/1024.0*5.00;
+  float c = vo*700;
+
+  // Compare checksums
+  checksum2 = P201_easySerial->read();
+  SerialFlush(); // Make sure no data is lost due to full buffer.
+  if (checksum == checksum2)
+  {
+    // Data is checked and good, fill in output
+    UserVar[event->BaseVarIndex]     = c;
+    values_received = true;
+    return true;
+  }
+  return false;
+}
 
 boolean Plugin_201(byte function, struct EventStruct *event, String& string)
 {
@@ -89,7 +180,24 @@ boolean Plugin_201(byte function, struct EventStruct *event, String& string)
         log += txPin;
         addLog(LOG_LEVEL_DEBUG, log);
 
-        P201_easySerial = new ESPeasySerial(rxPin, txPin, false, 0); // 96 Bytes buffer, enough for up to 3 packets.
+        if (P201_easySerial != nullptr) {
+          // Regardless the set pins, the software serial must be deleted.
+          delete P201_easySerial;
+          P201_easySerial = nullptr;
+        }
+
+        // Hardware serial is RX on 3 and TX on 1
+        if (rxPin == 13 && txPin == 15)
+        {
+          log = F("PM2.53 : using hardware serial");
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        else
+        {
+          log = F("PMSx003: using software serial");
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        P201_easySerial = new ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
         P201_easySerial->begin(2400);
         P201_easySerial->flush();
 
@@ -98,42 +206,37 @@ boolean Plugin_201(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_READ:
+    case PLUGIN_EXIT:
       {
-        while (P201_easySerial->available() > 0) {
-         data = P201_easySerial->read();
-          if (data == 170) {
-             z = 0;
-             incomeByte[z] = data;
-          }
-          else {
-               z++;
-               incomeByte[z] = data;
-          }
-          if (z == 6)
+          if (P201_easySerial)
           {
-           sum = incomeByte[1] + incomeByte[2] + incomeByte[3] + incomeByte[4];
-            if (incomeByte[5] == sum && incomeByte[6] == 255 )
-            {
-               float vo = (incomeByte[1] * 256.0 + incomeByte[2]) / 1024.0 * 5.00;
-               float c = vo * 700;
-               UserVar[event->BaseVarIndex] = (float)c;
-               break;
-            }
-            else {
-               z = 0;
-                P201_easySerial->flush();
-                data = 0;
-                for (int m = 0; m < 7; m++) {
-                   incomeByte[m] = 0;
-                   break;
-                }
-            }
-            z=0;
-            break;
+            delete P201_easySerial;
+            P201_easySerial=nullptr;
+          }
+          break;
+      }
+
+    // The update rate from the module is 200ms .. multiple seconds. Practise
+    // shows that we need to read the buffer many times per seconds to stay in
+    // sync.
+    case PLUGIN_TEN_PER_SECOND:
+      {
+        if (Plugin_201_init)
+        {
+          // Check if a complete packet is available in the UART FIFO.
+          if (PacketAvailable())
+          {
+            addLog(LOG_LEVEL_DEBUG_MORE, F("PM2.5 : Packet available"));
+            success = Plugin_201_process_data(event);
           }
         }
-        success = true;
+        break;
+      }
+    case PLUGIN_READ:
+      {
+        // When new data is available, return true
+        success = values_received;
+        values_received = false;
         break;
       }
   }

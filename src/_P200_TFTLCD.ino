@@ -33,7 +33,7 @@ TFT_eSPI tft = TFT_eSPI(135, 240); // Invoke custom library
 #define TFT_BL              14   // Display backlight control pin
 
 #define P200_Nlines 2        // The number of different lines which can be displayed
-#define P200_Nchars 30
+#define P200_Nchars 20
 
 boolean Plugin_200(byte function, struct EventStruct *event, String& string)
 {
@@ -108,9 +108,9 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
         {
           String strings[P200_Nlines];
           LoadCustomTaskSettings(event->TaskIndex, strings, P200_Nlines, P200_Nchars);
-          for (byte varNr = 0; varNr < P200_Nlines; varNr++)
+          for (byte varNr = 0; varNr < 2; varNr++)
           {
-            addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P200_Nchars);
+            addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 20);
           }
         }
 
@@ -150,8 +150,8 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
         tft.setTextColor(TFT_BLACK);
         //tft.setCursor(20, 30);
         tft.setTextDatum(PCONFIG(1));
-        tft.drawString("TEMP : 26 c",10,50);
-        tft.drawString("HUM  : 56 %",10,100);
+      //  tft.drawString("TEMP : 26 c",10,50);
+      //10  tft.drawString("HUM  : 56 %",10,100);
 
         if (TFT_BL > 0) {                           // TFT_BL has been set in the TFT_eSPI library in the User Setup file TTGO_T_Display.h
         pinMode(TFT_BL, OUTPUT);                // Set backlight pin to output mode
@@ -167,7 +167,8 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[P200_Nlines][P200_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
-          String tmpString = deviceTemplate[0];
+        String tmpString = deviceTemplate[0];
+        tft.drawString(tmpString,10,50);
         //  tft.drawString(tmpString,210,50);
 
         success = false;
