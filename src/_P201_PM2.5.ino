@@ -99,7 +99,8 @@ boolean Plugin_201_process_data(struct EventStruct *event) {
   }
 
   float vo = (data[0]*256.0 + data[1])/1024.0*5.00;
-  float c = vo*700;
+  float d = 100 / 0.35;
+  float c = vo*d;
 
   // Compare checksums
   checksum2 = P201_easySerial->read();
