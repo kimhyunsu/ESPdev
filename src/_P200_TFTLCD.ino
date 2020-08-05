@@ -32,11 +32,11 @@ TFT_eSPI tft = TFT_eSPI(135, 240); // Invoke custom library
 #define TFT_RST             23
 #define TFT_BL              14   // Display backlight control pin
 
-int Plugin_200_cols = 16;
+int Plugin_200_cols = 18;
 int Plugin_200_rows = 2;
 
 #define P200_Nlines 2        // The number of different lines which can be displayed
-#define P200_Nchars 20
+#define P200_Nchars 18
 
 
 boolean Plugin_200(byte function, struct EventStruct *event, String& string)
@@ -149,10 +149,9 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
       {
         tft.init();
         tft.setRotation(PCONFIG(0));
-        tft.fillScreen(TFT_WHITE);
+        tft.fillScreen(TFT_BLACK);
         tft.setTextSize(PCONFIG(2));
-        tft.setTextColor(TFT_BLACK);
-        //tft.setCursor(20, 30);
+        tft.setTextColor(TFT_YELLOW,TFT_BLACK);
         tft.setTextDatum(PCONFIG(1));
       //  tft.drawString("TEMP",10,50);
       //  tft.drawString("HUM",10,100);
@@ -179,12 +178,12 @@ boolean Plugin_200(byte function, struct EventStruct *event, String& string)
           if (tmpString.length())
           {
             String newString = P200_parseTemplate(tmpString, Plugin_200_cols);
-            tft.fillScreen(TFT_WHITE);
+
             if (x==0){
-           tft.drawString(newString,0,50);
+              tft.drawString(newString,0,30);
             }
             if (x==1){
-           tft.drawString(newString,0,100);
+              tft.drawString(newString,0,80);
             }
           }
         }
