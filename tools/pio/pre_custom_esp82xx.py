@@ -23,29 +23,31 @@ else:
     "CONTROLLER_SET_ALL",
     "NOTIFIER_SET_NONE",
     "PLUGIN_SET_ONLY_SWITCH",
-    "USES_P001",  # Switch
-    "USES_P002",  # ADC
-    "USES_P004",  # Dallas DS18b20
-    "USES_P027",  # INA219
-    "USES_P028",  # BME280
-    "USES_P036",  # FrameOLED
-    "USES_P045",  # MPU6050
+#    "USES_P001",  # Switch
+#    "USES_P002",  # ADC
+#    "USES_P004",  # Dallas DS18b20
+#    "USES_P027",  # INA219
+#    "USES_P028",  # BME280
+#    "USES_P036",  # FrameOLED
+#    "USES_P045",  # MPU6050
     "USES_P049",  # MHZ19
     "USES_P052",  # SenseAir
     "USES_P056",  # SDS011-Dust
     "USES_P059",  # Encoder
     "USES_P081",  # Cron
-    "USES_P082",  # GPS
+#    "USES_P082",  # GPS
 #   "USES_P085",  # AcuDC24x
 #   "USES_P087",  # Serial Proxy
 #   "USES_P094",  # CUL Reader
 #   "USES_P095",  # TFT ILI9341
+    "USES_P200",  # Touch (ESP32)
+    "USES_P201",  # Touch (ESP32)
 
     "USES_C016",  # Cache Controller
     "USES_C018",  # TTN/RN2483
 
     "FEATURE_MDNS",
-    "FEATURE_SD",
+#    "FEATURE_SD",
 
     "USE_SETTINGS_ARCHIVE"
   ])
@@ -66,6 +68,3 @@ print("\u001b[32m ------------------------------- \u001b[0m")
 if (len(my_defines) == 0):
   print("\u001b[31m No defines are set, probably configuration error. \u001b[0m")
   raise ValueError
-
-
-
